@@ -10,7 +10,7 @@
   <div class="container">
     <header class="header">
       <h1>📦 房间容器掉落系统</h1>
-      <p>双击html即可运行</p>
+      <p>模拟moba-搜打撤游戏中对应容器和房间中物品掉落情况，支持填写指定容器和房间以及具体模拟次数</p>
     </header>
 
     <section class="panel">
@@ -51,11 +51,11 @@
           </div>
         </div>
         <div class="field">
-          <label for="searchTimes">请输入搜索次数</label>
+          <label for="searchTimes">请输入容器搜索次数</label>
           <input id="searchTimes" type="number" min="1" value="1" />
         </div>
         <div class="field">
-          <label for="globalLimit">本次总掉落最大上限</label>
+          <label for="globalLimit">物品总掉落最大上限</label>
           <input id="globalLimit" type="number" min="1" value="999999" />
         </div>
       </div>
@@ -65,7 +65,7 @@
     </section>
 
     <section class="panel">
-      <h2>房间搜索</h2>
+      <h2>按房间搜索</h2>
       <div class="control-grid">
         <div class="field">
           <label for="roomSelectTrigger">请选择房间</label>
@@ -81,7 +81,7 @@
           <input id="roomSearchTimes" type="number" min="1" value="1" />
         </div>
         <div class="field">
-          <label for="roomGlobalLimit">本次总掉落最大上限</label>
+          <label for="roomGlobalLimit">物品总掉落最大上限</label>
           <input id="roomGlobalLimit" type="number" min="1" value="999999" />
         </div>
       </div>
@@ -104,6 +104,18 @@
       <h2>本次汇总</h2>
       <div id="summaryBox" class="summary-box empty">暂无统计</div>
     </section>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="modal-overlay" hidden>
+    <div class="modal-content">
+      <div class="modal-icon">✓</div>
+      <div class="modal-title">模拟成功</div>
+      <div class="modal-message" id="modalMessage"></div>
+      <button class="modal-btn" onclick="closeSuccessModal()">确定</button>
+    </div>
   </div>
 
   <script src="data.js"></script>

@@ -95,6 +95,81 @@ function setStatus(text, isError = false) {
   statusBoxEl.style.color = isError ? "#ff9e9e" : "#edf2f7";
 }
 
+function showToast(message, type = "success", duration = 3000) {
+  const toastContainer = document.getElementById("toastContainer");
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  
+  const icon = type === "success" ? "✓" : "✕";
+  toast.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-message">${message}</span>`;
+  
+  toastContainer.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.add("removing");
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, duration);
+}
+
+function showSuccessModal(label, result, searchTimes) {
+  const modalEl = document.getElementById("successModal");
+  const messageEl = document.getElementById("modalMessage");
+  
+  if (!result) {
+    messageEl.textContent = label;
+    modalEl.removeAttribute("hidden");
+    return;
+  }
+  
+  const globalLimit = result.globalLimit || 0;
+  const totalDropped = result.totalDropped || 0;
+  const totalValue = result.totalValue || 0;
+  const avgValuePerRound = searchTimes > 0 ? (totalValue / searchTimes).toFixed(0) : 0;
+  
+  const summaryHtml = `
+    <div style="text-align: left; font-size: 14px; line-height: 1.8;">
+      <div style="margin-bottom: 12px; font-size: 16px; font-weight: bold; text-align: center;">
+        <span style="color: #ffd27a;">${label}</span> 模拟 <span style="color: #ffd27a;">${searchTimes}</span> 次 成功
+      </div>
+      <div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px; margin: 8px 0;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span>本次掉落物品上限：</span>
+          <span style="color: #8dc3ff; font-weight: bold;">${globalLimit.toLocaleString()}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span>实际掉落物品数：</span>
+          <span style="color: #4ade80; font-weight: bold;">${totalDropped.toLocaleString()}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span>本次搜索物品总价值：</span>
+          <span style="color: #ffd27a; font-weight: bold;">${totalValue.toLocaleString()}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span>每轮平均价值：</span>
+          <span style="color: #ff9e9e; font-weight: bold;">${parseInt(avgValuePerRound).toLocaleString()}</span>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  messageEl.innerHTML = summaryHtml;
+  modalEl.removeAttribute("hidden");
+}
+
+function closeSuccessModal() {
+  const modalEl = document.getElementById("successModal");
+  modalEl.setAttribute("hidden", "");
+}
+
+// 按 ESC 关闭模态框
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeSuccessModal();
+  }
+});
+
 function renderContainerOptions(names) {
   const options = [
     `<option value="__ALL__">汇总</option>`,
@@ -1326,6 +1401,68 @@ function renderAllContainersSummary(result) {
     })
     .join("");
 
+  const containerLevelByName = new Map();
+  (DATA.vesselRows || []).forEach((row) => {
+    const containerName = cleanText(row.containerName);
+    const containerLevel = cleanText(row.containerLevel) || "未知";
+    if (containerName && !containerLevelByName.has(containerName)) {
+      containerLevelByName.set(containerName, containerLevel);
+    }
+  });
+
+  const levelStats = {};
+  (result.rounds || []).forEach((round) => {
+    (round.containers || []).forEach((container) => {
+      const level =
+        containerLevelByName.get(container.containerName) ||
+        container.drops?.[0]?.containerLevel ||
+        "未知";
+
+      if (!levelStats[level]) {
+        levelStats[level] = {
+          containerNames: new Set(),
+          containerCount: 0,
+          dropCount: 0,
+          totalValue: 0,
+          qualityCounts: {}
+        };
+      }
+
+      levelStats[level].containerNames.add(container.containerName);
+      levelStats[level].containerCount += 1;
+
+      (container.drops || []).forEach((drop) => {
+        levelStats[level].dropCount += 1;
+        levelStats[level].totalValue += drop.itemValue || 0;
+        levelStats[level].qualityCounts[drop.quality] =
+          (levelStats[level].qualityCounts[drop.quality] || 0) + 1;
+      });
+    });
+  });
+
+  const totalLevelValue = Object.values(levelStats).reduce(
+    (sum, stat) => sum + Number(stat.totalValue || 0),
+    0
+  );
+
+  const levelSummaryHtml = Object.entries(levelStats)
+    .sort((a, b) => getContainerLevelOrder(a[0]) - getContainerLevelOrder(b[0]))
+    .map(([level, stat]) => {
+      const avgValue = result.searchTimes > 0 ? Math.round(Number(stat.totalValue || 0) / result.searchTimes) : 0;
+      const percentValue = totalLevelValue > 0 ? ((Number(stat.totalValue || 0) / totalLevelValue) * 100).toFixed(2) : "0.00";
+      const qualityText = ["白", "绿", "蓝", "紫", "金", "红"]
+        .map((quality) => `${quality}：${stat.qualityCounts?.[quality] || 0}`)
+        .join(" | ");
+
+      return `
+        <div style="margin-bottom:6px; display:grid; grid-template-columns: 110px 1fr; gap: 10px; align-items: center;">
+          <strong style="color:#ffe3a3;">${level}</strong>
+          <div>容器种类数：${stat.containerNames.size} | 搜索容器数：${stat.containerCount} | 掉落数：${stat.dropCount} | 总价值：${Number(stat.totalValue || 0).toLocaleString("zh-CN")} | 平均价值：${avgValue.toLocaleString("zh-CN")} | 价值占比：${percentValue}% | ${qualityText}</div>
+        </div>
+      `;
+    })
+    .join("");
+
   // 按品质统计，按固定品质顺序显示
   const qualityHtml = Object.entries(result.summary.byQuality || {})
     .sort((a, b) => getQualityOrder(a[0]) - getQualityOrder(b[0]))
@@ -1375,6 +1512,9 @@ function renderAllContainersSummary(result) {
   summaryBoxEl.innerHTML = `
     <div>模式：容器汇总搜索 | 说明：所有容器各搜索一遍 | 轮数：${result.searchTimes}</div>
     <div>本次总掉落上限：${result.globalLimit} | 实际总掉落数：${result.totalDropped} | 本次搜索总价值：${Number(result.totalValue || 0).toLocaleString("zh-CN")} | 每轮平均价值：${avgValue.toLocaleString("zh-CN")}</div>
+
+    <div style="margin-top: 10px; color:#ffd27a;">按容器等级汇总</div>
+    ${levelSummaryHtml || "<div>无</div>"}
 
     <div style="margin-top: 10px; color:#ffd27a;">按品质统计</div>
     ${qualityHtml || "<div>无</div>"}
@@ -1768,22 +1908,28 @@ function simulateContainerAction() {
     const isAll = containerSelectEl.value === "__ALL__";
     setStatus(isAll ? "正在模拟容器汇总搜索..." : "正在模拟容器搜索...");
 
+    const searchTimes = Number(searchTimesEl.value);
+    const containerName = containerSelectEl.value;
+    
     const result =
-      containerSelectEl.value === "__ALL__"
-        ? simulateAllContainers(Number(searchTimesEl.value), Number(globalLimitEl.value))
-        : simulateContainerSearch(containerSelectEl.value, Number(searchTimesEl.value), Number(globalLimitEl.value));
+      isAll
+        ? simulateAllContainers(searchTimes, Number(globalLimitEl.value))
+        : simulateContainerSearch(containerName, searchTimes, Number(globalLimitEl.value));
 
     if (result.mode === "container-all") {
       renderAllContainersRounds(result);
       renderAllContainersSummary(result);
       setStatus("容器汇总搜索模拟完成");
+      showSuccessModal("所有容器", result, searchTimes);
     } else {
       renderContainerRounds(result);
       renderContainerSummary(result);
       setStatus("容器搜索模拟完成");
+      showSuccessModal(containerName, result, searchTimes);
     }
   } catch (error) {
     setStatus(error.message, true);
+    showToast(error.message, "error");
   }
 }
 
@@ -1792,22 +1938,28 @@ function simulateRoomAction() {
     const isAllRooms = roomSelectEl.value === "__ROOM_ALL__";
     setStatus(isAllRooms ? "正在模拟房间汇总搜索..." : "正在模拟房间搜索...");
 
+    const roomSearchTimes = Number(roomSearchTimesEl.value);
+    const roomName = roomSelectEl.value;
+    
     const result =
-      roomSelectEl.value === "__ROOM_ALL__"
-        ? simulateAllRooms(Number(roomSearchTimesEl.value), Number(roomGlobalLimitEl.value))
-        : simulateRoom(roomSelectEl.value, Number(roomSearchTimesEl.value), Number(roomGlobalLimitEl.value));
+      isAllRooms
+        ? simulateAllRooms(roomSearchTimes, Number(roomGlobalLimitEl.value))
+        : simulateRoom(roomName, roomSearchTimes, Number(roomGlobalLimitEl.value));
 
     if (result.mode === "room-all") {
       renderAllRoomsResult(result);
       renderAllRoomsSummary(result);
       setStatus("房间汇总搜索模拟完成");
+      showSuccessModal("所有房间", result, roomSearchTimes);
     } else {
       renderRoomRounds(result);
       renderRoomSummary(result);
       setStatus("房间搜索模拟完成");
+      showSuccessModal(roomName, result, roomSearchTimes);
     }
   } catch (error) {
     setStatus(error.message, true);
+    showToast(error.message, "error");
   }
 }
 
@@ -1823,18 +1975,24 @@ function simulateContainerAction() {
     closeContainerSelectPanel();
     setStatus(isAll ? "正在模拟全部容器搜索..." : `正在模拟 ${selectedNames.length} 个容器搜索...`);
 
+    const searchTimes = Number(searchTimesEl.value);
+    let containerLabel = "";
+
     let result;
     if (isAll) {
-      result = simulateAllContainers(Number(searchTimesEl.value), Number(globalLimitEl.value));
+      result = simulateAllContainers(searchTimes, Number(globalLimitEl.value));
+      containerLabel = "所有容器";
     } else if (selectedNames.length === 1) {
-      result = simulateContainerSearch(selectedNames[0], Number(searchTimesEl.value), Number(globalLimitEl.value));
+      result = simulateContainerSearch(selectedNames[0], searchTimes, Number(globalLimitEl.value));
+      containerLabel = selectedNames[0];
     } else {
       result = simulateSelectedContainers(
         selectedNames,
-        Number(searchTimesEl.value),
+        searchTimes,
         Number(globalLimitEl.value),
         `已选 ${selectedNames.length} 个容器`
       );
+      containerLabel = `已选 ${selectedNames.length} 个容器`;
     }
 
     if (result.mode === "container-all" || result.mode === "container-batch") {
@@ -1846,10 +2004,15 @@ function simulateContainerAction() {
       renderContainerSummary(result);
       setStatus("容器搜索模拟完成");
     }
+    
+    showSuccessModal(containerLabel, result, searchTimes);
   } catch (error) {
     setStatus(error.message, true);
+    showToast(error.message, "error");
   }
 }
+  
+
 
 function simulateRoomAction() {
   try {
@@ -1863,18 +2026,24 @@ function simulateRoomAction() {
     closeRoomSelectPanel();
     setStatus(isAll ? "正在模拟全部房间搜索..." : `正在模拟 ${selectedNames.length} 个房间搜索...`);
 
+    const roomSearchTimes = Number(roomSearchTimesEl.value);
+    let roomLabel = "";
+
     let result;
     if (isAll) {
-      result = simulateAllRooms(Number(roomSearchTimesEl.value), Number(roomGlobalLimitEl.value));
+      result = simulateAllRooms(roomSearchTimes, Number(roomGlobalLimitEl.value));
+      roomLabel = "所有房间";
     } else if (selectedNames.length === 1) {
-      result = simulateRoom(selectedNames[0], Number(roomSearchTimesEl.value), Number(roomGlobalLimitEl.value));
+      result = simulateRoom(selectedNames[0], roomSearchTimes, Number(roomGlobalLimitEl.value));
+      roomLabel = selectedNames[0];
     } else {
       result = simulateSelectedRooms(
         selectedNames,
-        Number(roomSearchTimesEl.value),
+        roomSearchTimes,
         Number(roomGlobalLimitEl.value),
         `已选 ${selectedNames.length} 个房间`
       );
+      roomLabel = `已选 ${selectedNames.length} 个房间`;
     }
 
     if (result.mode === "room-all" || result.mode === "room-batch") {
@@ -1887,8 +2056,11 @@ function simulateRoomAction() {
       renderRoomSummary(result);
       setStatus("房间搜索模拟完成");
     }
+    
+    showSuccessModal(roomLabel, result, roomSearchTimes);
   } catch (error) {
     setStatus(error.message, true);
+    showToast(error.message, "error");
   }
 }
 
