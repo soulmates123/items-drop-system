@@ -1,2 +1,2 @@
 # items-drop-system
-模拟moba搜打撤物品掉落
+模拟moba搜打撤游戏物品掉落
