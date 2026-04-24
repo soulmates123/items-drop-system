@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>房间容器掉落系统</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>📦 房间容器掉落系统</h1>
+      <p>双击html即可运行</p>
+    </header>
+
+    <section class="panel">
+      <div class="info-grid">
+        <div class="card">
+          <span class="label">容器有效规则数</span>
+          <strong id="vesselRuleCount">0</strong>
+        </div>
+        <div class="card">
+          <span class="label">品质有效规则数</span>
+          <strong id="colorRuleCount">0</strong>
+        </div>
+        <div class="card">
+          <span class="label">物品有效规则数</span>
+          <strong id="itemRuleCount">0</strong>
+        </div>
+        <div class="card">
+          <span class="label">地图房间总数</span>
+          <strong id="roomCount">0</strong>
+        </div>
+        <div class="card">
+          <span class="label">最近刷新时间</span>
+          <strong id="lastLoadedAt">-</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>按容器搜索</h2>
+      <div class="control-grid">
+        <div class="field">
+          <label for="containerSelectTrigger">请选择容器</label>
+          <div id="containerSelect" class="multi-select">
+            <button id="containerSelectTrigger" type="button" class="multi-select-trigger" aria-haspopup="true" aria-expanded="false">
+              汇总
+            </button>
+            <div id="containerSelectPanel" class="multi-select-panel" hidden></div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="searchTimes">请输入搜索次数</label>
+          <input id="searchTimes" type="number" min="1" value="1" />
+        </div>
+        <div class="field">
+          <label for="globalLimit">本次总掉落最大上限</label>
+          <input id="globalLimit" type="number" min="1" value="999999" />
+        </div>
+      </div>
+      <div class="btn-row">
+        <button id="simulateBtn" class="btn primary">开始模拟</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>房间搜索</h2>
+      <div class="control-grid">
+        <div class="field">
+          <label for="roomSelectTrigger">请选择房间</label>
+          <div id="roomSelect" class="multi-select">
+            <button id="roomSelectTrigger" type="button" class="multi-select-trigger" aria-haspopup="true" aria-expanded="false">
+              汇总
+            </button>
+            <div id="roomSelectPanel" class="multi-select-panel" hidden></div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="roomSearchTimes">请输入搜索房间次数</label>
+          <input id="roomSearchTimes" type="number" min="1" value="1" />
+        </div>
+        <div class="field">
+          <label for="roomGlobalLimit">本次总掉落最大上限</label>
+          <input id="roomGlobalLimit" type="number" min="1" value="999999" />
+        </div>
+      </div>
+      <div class="btn-row">
+        <button id="simulateRoomBtn" class="btn primary">开始搜索房间</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>状态</h2>
+      <div id="statusBox" class="status-box">正在读取数据...</div>
+    </section>
+
+    <section class="panel">
+      <h2>每次搜索结果</h2>
+      <div id="roundList" class="round-list empty">暂无结果</div>
+    </section>
+
+    <section class="panel">
+      <h2>本次汇总</h2>
+      <div id="summaryBox" class="summary-box empty">暂无统计</div>
+    </section>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

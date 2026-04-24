@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-04-21T13:12:51.333Z",
+  "publishFiles": [
+    "index.html",
+    "404.html",
+    "app.js",
+    "style.css",
+    "data.js"
+  ],
+  "recommendedHosting": [
+    "Tencent CloudBase static hosting",
+    "Tencent COS static website hosting",
+    "Alibaba Cloud OSS static website hosting"
+  ]
+}
