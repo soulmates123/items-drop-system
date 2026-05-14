@@ -22,9 +22,32 @@ body {
 .drop-item-name {
   font-size: 16px;
   font-weight: bold;
-  color: #abffa3;
   display: inline-block;
   line-height: 1.2;
+}
+
+.drop-item-name-white {
+  color: #f5f7fa;
+}
+
+.drop-item-name-green {
+  color: #abffa3;
+}
+
+.drop-item-name-blue {
+  color: #7db9ff;
+}
+
+.drop-item-name-purple {
+  color: #caa6ff;
+}
+
+.drop-item-name-gold {
+  color: #ffd27a;
+}
+
+.drop-item-name-red {
+  color: #ff7d7d;
 }
 
 .room-title {

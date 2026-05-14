@@ -68,6 +68,22 @@ function getQualityOrder(quality) {
   return qualityOrder[quality] !== undefined ? qualityOrder[quality] : 999;
 }
 
+function getItemNameQualityClass(quality) {
+  const qualityClassMap = {
+    "\u767D": "drop-item-name-white",
+    "\u7EFF": "drop-item-name-green",
+    "\u84DD": "drop-item-name-blue",
+    "\u7D2B": "drop-item-name-purple",
+    "\u91D1": "drop-item-name-gold",
+    "\u7EA2": "drop-item-name-red"
+  };
+  return qualityClassMap[String(quality || "").trim()] || "drop-item-name-white";
+}
+
+function renderQualityItemName(itemName, quality) {
+  return `<span class="drop-item-name ${getItemNameQualityClass(quality)}">${itemName}</span>`;
+}
+
 function randomInt(min, max) {
   if (min > max) [min, max] = [max, min];
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -1173,7 +1189,7 @@ function renderContainerRounds(result) {
           <div class="drop-item">
             <span class="badge badge-level">掉落等级 ${drop.dropLevel}</span>
             <span class="badge badge-quality">品质 ${drop.quality}</span>
-            <div><strong>${drop.itemName}</strong></div>
+            <div>${renderQualityItemName(drop.itemName, drop.quality)}</div>
             <div>容器：${drop.containerName}</div>
             <div>容器等级：${drop.containerLevel || "-"}</div>
             <div>分类：${drop.category || "-"}</div>
@@ -1226,7 +1242,7 @@ function renderContainerSummary(result) {
         .map(item => {
           const avgValue = item.count > 0 ? Math.round(item.totalValue / item.count) : 0;
           return `<div style="padding:4px 0 4px 12px; border-top:1px solid rgba(255,255,255,0.03);">
-            <span class="drop-item-name">${item.itemName}</span>：${item.count} 件 | 总价值：${Number(item.totalValue || 0).toLocaleString("zh-CN")} | 平均价值：${Number(avgValue).toLocaleString("zh-CN")}
+            ${renderQualityItemName(item.itemName, item.quality)}：${item.count} 件 | 总价值：${Number(item.totalValue || 0).toLocaleString("zh-CN")} | 平均价值：${Number(avgValue).toLocaleString("zh-CN")}
           </div>`;
         })
         .join("");
@@ -1342,7 +1358,7 @@ function renderAllContainersRounds(result) {
                 <div class="drop-item">
                   <span class="badge badge-level">掉落等级 ${drop.dropLevel}</span>
                   <span class="badge badge-quality">品质 ${drop.quality}</span>
-                  <div><strong>${drop.itemName}</strong></div>
+                  <div>${renderQualityItemName(drop.itemName, drop.quality)}</div>
                   <div>容器：${drop.containerName}</div>
                   <div>容器等级：${drop.containerLevel || "-"}</div>
                   <div>分类：${drop.category || "-"}</div>
@@ -1491,7 +1507,7 @@ function renderAllContainersSummary(result) {
         .map(item => {
           const avgValue = item.count > 0 ? Math.round(item.totalValue / item.count) : 0;
           return `<div style="padding:4px 0 4px 12px; border-top:1px solid rgba(255,255,255,0.03);">
-            <span class="drop-item-name">${item.itemName}</span>：${item.count} 件 | 总价值：${Number(item.totalValue || 0).toLocaleString("zh-CN")} | 平均价值：${Number(avgValue).toLocaleString("zh-CN")}
+            ${renderQualityItemName(item.itemName, item.quality)}：${item.count} 件 | 总价值：${Number(item.totalValue || 0).toLocaleString("zh-CN")} | 平均价值：${Number(avgValue).toLocaleString("zh-CN")}
           </div>`;
         })
         .join("");
@@ -1549,7 +1565,7 @@ function renderRoomRounds(result) {
                   line-height:1.8;
                   border-top:1px solid rgba(255,255,255,0.05);
                 ">
-                <span class="drop-item-name">${drop.itemName}</span>
+                ${renderQualityItemName(drop.itemName, drop.quality)}
                 ｜ 掉落等级${drop.dropLevel}
                 ｜ 品质${drop.quality}
                 ｜ 分类：${drop.category || "-"}
@@ -1649,7 +1665,7 @@ function renderRoomSummary(result) {
         .map(item => {
           const avgValue = item.count > 0 ? Math.round(item.totalValue / item.count) : 0;
           return `<div style="padding:4px 0 4px 12px; border-top:1px solid rgba(255,255,255,0.03);">
-            <span class="drop-item-name">${item.itemName}</span>：${item.count} 件 | 总价值：${Number(item.totalValue || 0).toLocaleString("zh-CN")} | 平均价值：${Number(avgValue).toLocaleString("zh-CN")}
+            ${renderQualityItemName(item.itemName, item.quality)}：${item.count} 件 | 总价值：${Number(item.totalValue || 0).toLocaleString("zh-CN")} | 平均价值：${Number(avgValue).toLocaleString("zh-CN")}
           </div>`;
         })
         .join("");
@@ -1703,7 +1719,7 @@ function renderAllRoomsResult(result) {
                         line-height:1.8;
                         border-top:1px solid rgba(255,255,255,0.05);
                       ">
-                        <span class="drop-item-name">${drop.itemName}</span>
+                        ${renderQualityItemName(drop.itemName, drop.quality)}
                         ｜ 掉落等级${drop.dropLevel}
                         ｜ 品质${drop.quality}
                         ｜ 分类：${drop.category || "-"}
@@ -1861,7 +1877,7 @@ function renderAllRoomsSummary(result) {
         .map(item => {
           const avgValue = item.count > 0 ? Math.round(item.totalValue / item.count) : 0;
           return `<div style="padding:4px 0 4px 12px; border-top:1px solid rgba(255,255,255,0.03);">
-            <span class="drop-item-name">${item.itemName}</span>：${item.count} 件 | 总价值：${Number(item.totalValue || 0).toLocaleString("zh-CN")} | 平均价值：${Number(avgValue).toLocaleString("zh-CN")}
+            ${renderQualityItemName(item.itemName, item.quality)}：${item.count} 件 | 总价值：${Number(item.totalValue || 0).toLocaleString("zh-CN")} | 平均价值：${Number(avgValue).toLocaleString("zh-CN")}
           </div>`;
         })
         .join("");
